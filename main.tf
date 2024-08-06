@@ -19,6 +19,11 @@ variable "cloud_init_script" {
   type      = string
 }
 
+variable "cloud_init_worker_script" {
+  sensitive = true
+  type      = string
+}
+
 # Configure the Hetzner Cloud Provider with your token
 provider "hcloud" {
   token = var.hcloud_token
@@ -70,7 +75,7 @@ resource "hcloud_server" "worker-node-1" {
   network {
     network_id = hcloud_network.private_network.id
   }
-  user_data = file("${path.module}/cloud-init-worker.yaml")
+  user_data = var.cloud_init_worker_script
 
   # add the master node as a dependency
   depends_on = [hcloud_network_subnet.private_network_subnet, hcloud_server.master-node]

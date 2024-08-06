@@ -90,6 +90,36 @@ jobs:
         EOF
         )"
 
+    - name: Set up cloud-init-worker script
+      id: cloud-init-worker
+      run: |
+        echo "::set-output name=cloud_init_worker_script::$(cat <<EOF
+        #cloud-config
+        users:
+          - name: cluster
+            ssh-authorized-keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC+Pc1AiJeBMPTwbgYRFVwrlJzClUOUNcC6Cvd3lkM07VioiZTEHOgFGqfa+Gfwhd8Lb8SoxM8Os0jElEAtG5Bs9lkTkN015QjOy/raBf3Jo0dgEEdUy3ZK2z3ExhUFyiHunfnDi9eSBps6SiICjxNDbGKB6vTojSYVfqdbqLH6n+L+SrB94T4Tk+SvtDaLO7QtqA3EeEvI70D6LBRWLc+6e0i+Fz8IWnEHJiJETHgYpJdd3HR5rXWJuUxQdF7a/wKkZDZkXE6mHof08cZ60LwCclylLKKsVqIyppMVmcYRrOfO5hVa5iPASYOOICshiqvwn2ugTIbMUow6cd82oGL2AkqQFTz6F1wwzufvPQsp0E3X0QIGSO36Ux3+BeY7dC2t1aCxzMkzAcNTGvZ4ez+6pxiclO5Awa+SfvFl3VgO6xuI2tkDnT/fH513LF2oiQArAq7TLYIX6MPJWqfv617RnT2woQItwJ7nqkH8ugeFqMmdBgxISAke+1r4mnVeiLk=
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+        
+        write_files:
+          - path: /root/.ssh/id_rsa
+            content: |
+              -----BEGIN OPENSSH PRIVATE KEY-----
+              ${WORKER_PRIVATE_SSH_KEY}
+              -----END OPENSSH PRIVATE KEY-----
+            permissions: "0600"
+        
+        runcmd:
+          - apt-get update -y
+          - until curl -k https://10.0.1.1:6443; do sleep 5; done
+          - REMOTE_TOKEN=$(ssh -o StrictHostKeyChecking=accept-new cluster@10.0.1.1 sudo cat /var/lib/rancher/k3s/server/node-token)
+          - curl -sfL https://get.k3s.io | K3S_URL=https://10.0.1.1:6443 K3S_TOKEN=$REMOTE_TOKEN sh -
+        EOF
+        )"
+
+      env:
+        WORKER_PRIVATE_SSH_KEY: ${{ secrets.WORKER_PRIVATE_SSH_KEY }}
 
     # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     #- name: Setup Terraform
@@ -110,12 +140,11 @@ jobs:
       env:
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
         CLOUD_INIT_SCRIPT: ${{ steps.cloud-init.outputs.cloud_init_script }}
+        CLOUD_INIT_WORKER_SCRIPT: ${{ steps.cloud-init-worker.outputs.cloud_init_worker_script }}
       run: |
           echo "${CLOUD_INIT_SCRIPT}" > cloud-init.yaml
-          terraform plan -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -input=false
+          terraform plan -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -var "cloud_init_worker_script=${CLOUD_INIT_WORKER_SCRIPT}" -input=false
   
-
-
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
