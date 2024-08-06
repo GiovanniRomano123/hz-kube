@@ -109,8 +109,11 @@ jobs:
     - name: Terraform Plan
       env:
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+        CLOUD_INIT_SCRIPT: ${{ steps.cloud-init.outputs.cloud_init_script }}
       run: |
-        terraform plan -var "hcloud_token=${HCLOUD_TOKEN}" -input=false
+          echo "${CLOUD_INIT_SCRIPT}" > cloud-init.yaml
+          terraform plan -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -input=false
+  
 
 
       # On push to "main", build or change infrastructure according to Terraform configuration files

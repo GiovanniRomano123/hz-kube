@@ -14,6 +14,11 @@ variable "hcloud_token" {
   sensitive = true # Requires terraform >= 0.14
 }
 
+variable "cloud_init_script" {
+  sensitive = true
+  type      = string
+}
+
 # Configure the Hetzner Cloud Provider with your token
 provider "hcloud" {
   token = var.hcloud_token
@@ -46,7 +51,7 @@ resource "hcloud_server" "master-node" {
     # Here the worker nodes will use 10.0.1.1 to communicate with the master node
     ip = "10.0.1.1"
   }
-  user_data = file("${path.module}/cloud-init.yaml")
+  user_data = var.cloud_init_script
 
   # If we don't specify this, Terraform will create the resources in parallel
   # We want this node to be created after the private network is created
