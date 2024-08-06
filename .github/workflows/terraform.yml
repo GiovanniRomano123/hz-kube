@@ -68,6 +68,29 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Set up cloud-init script
+      id: cloud-init
+      run: |
+        echo "::set-output name=cloud_init_script::$(cat <<'EOF'
+        #cloud-config
+        packages:
+          - curl
+        users:
+          - name: cluster
+            ssh-authorized-keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC+Pc1AiJeBMPTwbgYRFVwrlJzClUOUNcC6Cvd3lkM07VioiZTEHOgFGqfa+Gfwhd8Lb8SoxM8Os0jElEAtG5Bs9lkTkN015QjOy/raBf3Jo0dgEEdUy3ZK2z3ExhUFyiHunfnDi9eSBps6SiICjxNDbGKB6vTojSYVfqdbqLH6n+L+SrB94T4Tk+SvtDaLO7QtqA3EeEvI70D6LBRWLc+6e0i+Fz8IWnEHJiJETHgYpJdd3HR5rXWJuUxQdF7a/wKkZDZkXE6mHof08cZ60LwCclylLKKsVqIyppMVmcYRrOfO5hVa5iPASYOOICshiqvwn2ugTIbMUow6cd82oGL2AkqQFTz6F1wwzufvPQsp0E3X0QIGSO36Ux3+BeY7dC2t1aCxzMkzAcNTGvZ4ez+6pxiclO5Awa+SfvFl3VgO6xuI2tkDnT/fH513LF2oiQArAq7TLYIX6MPJWqfv617RnT2woQItwJ7nqkH8ugeFqMmdBgxISAke+1r4mnVeiLk=
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCq5wk355yc/H0aqsYIf6xl7GFhjWofMRkzTcAHi9llFMAj+bMnHj1rJYZcQPlrtQ5OzniJ3AxhI/gbJiHb1sPEjNNReR4xwO+DF/wmLgHWTupwKXuidNEXVj9P60x+sBDVee5IvTPdygBgMaRQAWqI7aBL9XU1dHCaqRjAm0LBvE3LEuezNcHFA9YsF+4RNUugQ80O8et1BbQIypmRsx2TtbLB1hrvaYr62HsHFCq/teWxHwL4fy2tyMW5kF0aWJWauzK/TxTcNbOvvhdFFQCsYOo1ByETdVT9jmxIPklH88TiMR49oR9pVinYNUrG5GKSCH9iJJuRRtfWhFmX+YfsPnN/2CG+T+tqNzuWqI7PtEYLQF9EEh0ivFki9ab6aAww+fz2pTbNKEgWTfARH+mlogq5gz9Tg7buh2gomVuKFNaw6OcmLdFru7FTnDALKtUNiX276Y4nnrbXCplm4VDRMcT0pW+8b0XMX8ikYq6/hYaVOfpvQKnUcJ4QW+2MZn8=
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+        runcmd:
+          - apt-get update -y
+          - curl https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+          - chown cluster:cluster /etc/rancher/k3s/k3s.yaml
+          - chown cluster:cluster /var/lib/rancher/k3s/server/node-token
+        EOF
+        )"
+
+
     # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     #- name: Setup Terraform
     #  uses: hashicorp/setup-terraform@v1
