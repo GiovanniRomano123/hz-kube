@@ -158,4 +158,6 @@ jobs:
     - name: Terraform Destroy
       env: 
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-      run:  terraform destroy -var "hcloud_token=${HCLOUD_TOKEN}"
+        CLOUD_INIT_SCRIPT: ${{ steps.cloud-init.outputs.cloud_init_script }}
+        CLOUD_INIT_WORKER_SCRIPT: ${{ steps.cloud-init-worker.outputs.cloud_init_worker_script }}
+      run:  terraform destroy -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -var "cloud_init_worker_script=${CLOUD_INIT_WORKER_SCRIPT}" -input=false
