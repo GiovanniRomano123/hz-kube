@@ -42,3 +42,7 @@ terraform.rc
 
 # Ignore node_modules directory
 node_modules/
+
+!Chart.yaml
+!values.yaml
+
