@@ -56,9 +56,9 @@ resource "hcloud_server" "master-node" {
     # Here the worker nodes will use 10.0.1.1 to communicate with the master node
     ip = "10.0.1.1"
   }
-  user_data = var.cloud_init_script
+  #user_data = var.cloud_init_script
   # For local deployment during test phase:
-  #user_data = file("${path.module}/cloud-init.yaml")
+  user_data = file("${path.module}/cloud-init.yaml")
 
   # If we don't specify this, Terraform will create the resources in parallel
   # We want this node to be created after the private network is created
@@ -77,9 +77,9 @@ resource "hcloud_server" "worker-node-1" {
   network {
     network_id = hcloud_network.private_network.id
   }
-  user_data = var.cloud_init_worker_script
+  #user_data = var.cloud_init_worker_script
   # For local deployment during test phase:
-  # user_data = file("${path.module}/cloud-init-worker.yaml")
+  user_data = file("${path.module}/cloud-init-worker.yaml")
 
 
   # add the master node as a dependency
