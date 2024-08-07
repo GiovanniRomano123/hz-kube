@@ -147,10 +147,15 @@ jobs:
   
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Apply
-      env:
+    #- name: Terraform Apply
+    #  env:
+    #    HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+    #    CLOUD_INIT_SCRIPT: ${{ steps.cloud-init.outputs.cloud_init_script }}
+    #    CLOUD_INIT_WORKER_SCRIPT: ${{ steps.cloud-init-worker.outputs.cloud_init_worker_script }}
+    #  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #  run: terraform apply -auto-approve -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -var "cloud_init_worker_script=${CLOUD_INIT_WORKER_SCRIPT}" -input=false
+
+    - name: Terraform Destroy
+      env: 
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-        CLOUD_INIT_SCRIPT: ${{ steps.cloud-init.outputs.cloud_init_script }}
-        CLOUD_INIT_WORKER_SCRIPT: ${{ steps.cloud-init-worker.outputs.cloud_init_worker_script }}
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve -var "hcloud_token=${HCLOUD_TOKEN}" -var "cloud_init_script=${CLOUD_INIT_SCRIPT}" -var "cloud_init_worker_script=${CLOUD_INIT_WORKER_SCRIPT}" -input=false
+      run:  terraform destroy -var "hcloud_token=${HCLOUD_TOKEN}"
